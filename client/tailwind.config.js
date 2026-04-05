@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        heading: ['"Poppins"', 'sans-serif'],
-        sans: ['"Inter"', 'sans-serif'],
+        heading: ['"Cormorant Garamond"', 'serif'],
+        sans: ['"Raleway"', 'sans-serif'],
       },
       colors: {
         brand: {
