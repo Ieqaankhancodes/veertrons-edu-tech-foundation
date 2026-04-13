@@ -12,9 +12,8 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key_for_dev_only_please_change';
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
-app.use(cors()); // Allow all origins to seamlessly connect with any frontend deployment
+app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
-
 
 // ─── Database Setup ──────────────────────────────────────────────────────────
 // Creates a free local SQLite file — no cloud, no payment needed!
@@ -219,15 +218,15 @@ app.post('/api/subscribe', (req, res) => {
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   const donationCount = db.prepare('SELECT COUNT(*) as count FROM donations').get();
-  const contactCount  = db.prepare('SELECT COUNT(*) as count FROM contacts').get();
-  const subCount      = db.prepare('SELECT COUNT(*) as count FROM subscribers').get();
+  const contactCount = db.prepare('SELECT COUNT(*) as count FROM contacts').get();
+  const subCount = db.prepare('SELECT COUNT(*) as count FROM subscribers').get();
 
   res.json({
     status: 'ok',
     database: 'SQLite (local, free)',
     stats: {
       donations: donationCount.count,
-      contacts:  contactCount.count,
+      contacts: contactCount.count,
       subscribers: subCount.count,
     },
   });

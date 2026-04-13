@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, CreditCard, ShieldCheck, ArrowRight, CheckCircle, Loader, AlertCircle } from 'lucide-react';
+import axios from 'axios';
 
 export default function Donate() {
   const [amount, setAmount] = useState(50);
@@ -40,29 +41,19 @@ export default function Donate() {
     }
 
     try {
-      const res = await fetch('/api/donations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: form.first_name,
-          last_name: form.last_name,
-          email: form.email,
-          amount: finalAmount,
-          type,
-          message: form.message,
-        }),
+      const { data } = await axios.post('/api/donations', {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: form.email,
+        amount: finalAmount,
+        type,
+        message: form.message,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Something went wrong');
-      }
 
       setStatus('success');
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || 'Failed to process donation. Is the server running?');
+      setErrorMsg(err.response?.data?.error || err.message || 'Failed to process donation. Is the server running?');
       setStatus('error');
     }
   };
