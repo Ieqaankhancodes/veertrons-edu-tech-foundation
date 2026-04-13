@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   GraduationCap,
   Heart,
@@ -9,9 +9,13 @@ import {
   Mail,
   MapPin,
   ChevronRight,
-  HeartHandshake
+  HeartHandshake,
+  Loader,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const PROGRAMS = [
   {
@@ -286,6 +290,40 @@ function GetInvolved() {
 }
 
 function Contact() {
+  const [form, setForm] = useState({ name: '', phone: '', email: '', subject: 'I want to volunteer', message: '' });
+  const [status, setStatus] = useState('idle'); // idle, loading, success, error
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.message) {
+      setErrorMsg('Please fill out all required fields.');
+      setStatus('error');
+      return;
+    }
+
+    setStatus('loading');
+    setErrorMsg('');
+
+    try {
+      await axios.post('/api/contact', {
+        name: form.name,
+        email: form.email,
+        subject: form.subject,
+        message: `Phone: ${form.phone || 'N/A'}\n\n${form.message}`
+      });
+      setStatus('success');
+      setForm({ name: '', phone: '', email: '', subject: 'I want to volunteer', message: '' });
+      setTimeout(() => setStatus('idle'), 5000);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.response?.data?.error || 'Failed to send message. Please try again.');
+      setStatus('error');
+    }
+  };
+
   return (
     <section id="contact" className="py-20 lg:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col lg:flex-row gap-16">
@@ -340,37 +378,70 @@ function Contact() {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="lg:w-2/3"
         >
-          <form className="bg-white border text-left border-gray-100 shadow-xl p-8 lg:p-12 rounded-[2rem]">
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Full Name <span className="text-red-500">*</span></label>
-                <input type="text" placeholder="John Doe" className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors" />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
-                <input type="tel" placeholder="+91 XXXXX XXXXX" className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors" />
-              </div>
-            </div>
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Email Address <span className="text-red-500">*</span></label>
-              <input type="email" placeholder="john@example.com" className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors" />
-            </div>
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-gray-700 mb-2">How can we help? <span className="text-red-500">*</span></label>
-              <select className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors text-gray-700">
-                <option>I want to volunteer</option>
-                <option>Interested in Sponsorship/Partnership</option>
-                <option>Register for an internship</option>
-                <option>Other Inquiry</option>
-              </select>
-            </div>
-            <div className="mb-8">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Message</label>
-              <textarea rows={4} placeholder="Type your message here..." className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors resize-none"></textarea>
-            </div>
-            <button type="submit" className="w-full min-h-[56px] text-lg bg-brand-blue hover:bg-blue-900 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
-              Send Message
-            </button>
+          <form onSubmit={handleSubmit} className="bg-white border text-left border-gray-100 shadow-xl p-8 lg:p-12 rounded-[2rem]">
+            {status === 'success' ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-10 text-center"
+              >
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-brand-blue mb-2">Message Sent!</h3>
+                <p className="text-gray-600">Thank you for reaching out. We will get back to you shortly.</p>
+                <button type="button" onClick={() => setStatus('idle')} className="mt-8 text-brand-orange font-bold hover:underline">
+                  Send another message
+                </button>
+              </motion.div>
+            ) : (
+              <>
+                <AnimatePresence>
+                  {status === 'error' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6 text-sm"
+                    >
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {errorMsg}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Full Name <span className="text-red-500">*</span></label>
+                    <input name="name" value={form.name} onChange={handleChange} type="text" placeholder="John Doe" required className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
+                    <input name="phone" value={form.phone} onChange={handleChange} type="tel" placeholder="+91 XXXXX XXXXX" className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors" />
+                  </div>
+                </div>
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Email Address <span className="text-red-500">*</span></label>
+                  <input name="email" value={form.email} onChange={handleChange} type="email" placeholder="john@example.com" required className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors" />
+                </div>
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">How can we help? <span className="text-red-500">*</span></label>
+                  <select name="subject" value={form.subject} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors text-gray-700">
+                    <option>I want to volunteer</option>
+                    <option>Interested in Sponsorship/Partnership</option>
+                    <option>Register for an internship</option>
+                    <option>Other Inquiry</option>
+                  </select>
+                </div>
+                <div className="mb-8">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Message <span className="text-red-500">*</span></label>
+                  <textarea name="message" value={form.message} onChange={handleChange} rows={4} required placeholder="Type your message here..." className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors resize-none"></textarea>
+                </div>
+                <button disabled={status === 'loading'} type="submit" className="w-full min-h-[56px] text-lg bg-brand-blue hover:bg-blue-900 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                  {status === 'loading' ? <><Loader className="w-5 h-5 animate-spin" /> Sending...</> : 'Send Message'}
+                </button>
+              </>
+            )}
           </form>
         </motion.div>
       </div>
