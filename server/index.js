@@ -240,4 +240,15 @@ app.listen(PORT, () => {
   console.log(`💰 Donations API: http://localhost:${PORT}/api/donations`);
   console.log(`📧 Contact API:   http://localhost:${PORT}/api/contact`);
   console.log(`\n💡 Database is 100% FREE — stored locally in server/data/veertrons.db\n`);
+
+  // Prevent server from sleeping (for free tier hosting like Render)
+  if (process.env.RENDER_EXTERNAL_URL) {
+    const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
+    setInterval(() => {
+      fetch(`${process.env.RENDER_EXTERNAL_URL}/api/health`)
+        .then(res => console.log(`[Self-Ping] Status: ${res.status} - Keeping server awake!`))
+        .catch(err => console.error('[Self-Ping] Error:', err.message));
+    }, PING_INTERVAL);
+    console.log(`⏰ Self-ping scheduled every 14 minutes for ${process.env.RENDER_EXTERNAL_URL}`);
+  }
 });
