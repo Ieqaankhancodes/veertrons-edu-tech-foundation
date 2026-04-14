@@ -26,11 +26,11 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-light flex items-center justify-center pt-20 pb-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-transparent flex items-center justify-center pt-20 pb-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full space-y-8 bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-gray-100"
+        className="max-w-md w-full space-y-8 bg-white/70 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/40 p-8 md:p-10 rounded-3xl shadow-xl border border-white"
       >
         <div>
           <h2 className="mt-2 text-center text-3xl font-heading font-extrabold text-brand-blue">
@@ -78,7 +78,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-blue hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue disabled:opacity-70 disabled:cursor-not-allowed transition-colors shadow-md"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-brand-blue to-blue-800 hover:from-blue-800 hover:to-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue disabled:opacity-70 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-blue-500/30"
             >
               {loading ? <Loader className="w-5 h-5 animate-spin" /> : 'Log In'}
             </button>

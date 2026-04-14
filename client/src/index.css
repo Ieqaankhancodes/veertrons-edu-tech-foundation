@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-brand-light text-gray-800 antialiased;
+    @apply bg-gradient-to-br from-blue-50/80 via-[#FFF7ED] to-blue-50/50 bg-fixed min-h-screen text-gray-800 antialiased;
     font-family: 'Inter', sans-serif;
     -webkit-tap-highlight-color: transparent; /* Removes blue flash on mobile tap */
   }

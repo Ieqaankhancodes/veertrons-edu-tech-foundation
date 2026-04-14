@@ -54,14 +54,14 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <Loader className="w-10 h-10 animate-spin text-brand-orange" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-28 pb-20 mt-16 lg:mt-0">
+    <div className="min-h-screen bg-transparent pt-28 pb-20 mt-16 lg:mt-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-white text-gray-700 px-5 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 hover:text-red-600 transition-colors shadow-sm font-semibold"
+            className="flex items-center gap-2 bg-white/70 backdrop-blur-md text-gray-700 px-5 py-2.5 rounded-lg border border-white hover:bg-white hover:text-red-600 transition-colors shadow-sm font-semibold"
           >
             <LogOut className="w-4 h-4" /> Sign Out
           </button>
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white/70 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/40 p-6 rounded-2xl shadow-sm border border-white flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium mb-1">Total Donations</p>
               <h3 className="text-3xl font-extrabold text-brand-blue">{data.donations.length}</h3>
@@ -94,7 +94,7 @@ export default function AdminDashboard() {
               <Heart className="w-6 h-6" />
             </div>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white/70 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/40 p-6 rounded-2xl shadow-sm border border-white flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium mb-1">Total Messages</p>
               <h3 className="text-3xl font-extrabold text-brand-blue">{data.messages.length}</h3>
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
               <MessageSquare className="w-6 h-6" />
             </div>
           </motion.div>
-           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white/70 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/40 p-6 rounded-2xl shadow-sm border border-white flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm font-medium mb-1">Total Raised</p>
               <h3 className="text-3xl font-extrabold text-brand-blue">
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Content Area */}
-        <div className="bg-white shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/40 shadow-sm border border-white rounded-3xl overflow-hidden">
           <AnimatePresence mode="wait">
             {activeTab === 'donations' && (
               <motion.div

@@ -19,7 +19,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-brand-blue relative overflow-hidden pt-20 border-t-4 border-brand-orange">
+    <footer className="bg-gradient-to-br from-brand-blue via-blue-900 to-[#0B1B42] relative overflow-hidden pt-20 border-t-4 border-brand-orange">
       <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">

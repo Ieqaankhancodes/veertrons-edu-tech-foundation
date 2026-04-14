@@ -48,7 +48,7 @@ export default function Navbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-[0_4px_25px_rgba(0,0,0,0.05)] py-2' : 'bg-white/50 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none border-b lg:border-none border-gray-100 py-3 lg:py-6'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 bg-gradient-to-r from-white/90 via-blue-50/50 to-white/90 backdrop-blur-md shadow-[0_4px_25px_rgba(0,0,0,0.05)] py-2 border-b border-white/60' : 'bg-white/30 lg:bg-transparent backdrop-blur-sm lg:backdrop-blur-none border-b lg:border-none border-white/30 py-3 lg:py-6'
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
@@ -91,7 +91,7 @@ export default function Navbar() {
           </Link>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden p-2.5 text-brand-blue bg-white shadow-sm border border-gray-100 hover:bg-gray-50 rounded-full transition-colors"
+            className="lg:hidden p-2.5 text-brand-blue bg-white/70 backdrop-blur-sm bg-gradient-to-br from-white to-blue-50/50 shadow-sm border border-white hover:bg-white rounded-full transition-colors"
             aria-label="Toggle menu"
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -106,7 +106,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-lg border-t border-brand-light shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
+            className="lg:hidden absolute top-full left-0 w-full bg-white/95 bg-gradient-to-b from-white to-orange-50/30 backdrop-blur-lg border-t border-white/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
           >
             <div className="px-6 py-8 flex flex-col gap-4 max-h-[calc(100vh-80px)] overflow-y-auto pb-32">
               {NAV_LINKS.map((link) => (

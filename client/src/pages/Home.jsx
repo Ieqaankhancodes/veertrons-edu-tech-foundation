@@ -151,7 +151,7 @@ function Hero() {
 
 function Vision() {
   return (
-    <section id="mission" className="py-20 lg:py-28 bg-brand-blue relative overflow-hidden">
+    <section id="mission" className="py-20 lg:py-28 bg-gradient-to-br from-brand-blue to-blue-900 relative overflow-hidden">
       <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
       
       <motion.div 
@@ -174,8 +174,8 @@ function Vision() {
 
 function Programs() {
   return (
-    <section id="programs" className="py-20 lg:py-28 bg-gray-50 border-y border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
+    <section id="programs" className="py-20 lg:py-28 bg-transparent relative">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl sm:text-4xl font-heading font-semibold text-brand-blue mb-4">Core Focus Areas</h2>
           <p className="text-gray-600 text-lg">Structured into three distinct pillars to provide targeted, meaningful impact across all segments of our society.</p>
@@ -191,7 +191,7 @@ function Programs() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-3xl overflow-hidden shadow-soft border border-gray-100 flex flex-col group hover:shadow-xl transition-all duration-300"
+                className="bg-white/60 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/40 rounded-3xl overflow-hidden shadow-soft border border-white flex flex-col group hover:shadow-xl transition-all duration-300"
               >
                 <div className="relative h-60 w-full overflow-hidden">
                   <img
@@ -210,7 +210,7 @@ function Programs() {
                   <h3 className="text-2xl font-heading font-semibold text-brand-blue mb-3">{program.category}</h3>
                   <p className="text-gray-600 mb-6 text-sm flex-1">{program.desc}</p>
                   
-                  <div className="space-y-3 bg-gray-50 p-5 rounded-2xl">
+                  <div className="space-y-3 bg-white/50 backdrop-blur-sm border border-white/60 p-5 rounded-2xl">
                     {program.items.map((item, i) => (
                       <div key={i} className="flex items-start gap-3">
                         <ChevronRight className="w-5 h-5 text-brand-lightBlue shrink-0" />
@@ -230,7 +230,7 @@ function Programs() {
 
 function GetInvolved() {
   return (
-    <section id="get-involved" className="py-20 lg:py-28 bg-brand-blue relative overflow-hidden">
+    <section id="get-involved" className="py-20 lg:py-28 bg-gradient-to-r from-brand-blue via-blue-800 to-brand-blue relative overflow-hidden">
       <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
       
       <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10">
@@ -251,22 +251,22 @@ function GetInvolved() {
               title: "Volunteer Time",
               desc: "Join our health camps, training sessions, or localized social drives.",
               btn: "Become a Volunteer",
-              bg: "bg-white text-gray-800",
-              btnCol: "bg-brand-orange text-white hover:bg-orange-700"
+              bg: "bg-white/95 backdrop-blur-sm bg-gradient-to-br from-white to-blue-50/50 text-gray-800",
+              btnCol: "bg-gradient-to-r from-brand-orange to-orange-600 text-white hover:from-orange-600 hover:to-orange-700"
             },
             {
               title: "Donate for Better skill India Education",
               desc: "Your contributions help us empower youth with essential career skills across India.",
               btn: "Donate Now",
-              bg: "bg-brand-orange text-white",
-              btnCol: "bg-white text-brand-orange hover:bg-orange-50"
+              bg: "bg-gradient-to-br from-brand-orange to-orange-600 text-white shadow-orange-500/20",
+              btnCol: "bg-white/90 backdrop-blur-sm text-brand-orange hover:bg-white"
             },
             {
               title: "Enroll / Register",
               desc: "Students and graduates can register for upcoming internships and seminars.",
               btn: "Register Now",
-              bg: "bg-white text-gray-800",
-              btnCol: "bg-brand-lightBlue text-white hover:bg-blue-700"
+              bg: "bg-white/95 backdrop-blur-sm bg-gradient-to-br from-white to-blue-50/50 text-gray-800",
+              btnCol: "bg-gradient-to-r from-brand-lightBlue to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
             }
           ].map((card, i) => (
             <motion.div 
@@ -338,7 +338,7 @@ function Contact() {
   };
 
   return (
-    <section id="contact" className="py-20 lg:py-28 bg-white">
+    <section id="contact" className="py-20 lg:py-28 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col lg:flex-row gap-16">
         
         <motion.div 
@@ -391,7 +391,7 @@ function Contact() {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="lg:w-2/3"
         >
-          <form onSubmit={handleSubmit} className="bg-white border text-left border-gray-100 shadow-xl p-8 lg:p-12 rounded-[2rem]">
+          <form onSubmit={handleSubmit} className="bg-white/70 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/40 border border-white text-left shadow-xl p-8 lg:p-12 rounded-[2rem]">
             {status === 'success' ? (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -450,7 +450,7 @@ function Contact() {
                   <label className="block text-sm font-bold text-gray-700 mb-2">Message <span className="text-red-500">*</span></label>
                   <textarea name="message" value={form.message} onChange={handleChange} rows={4} required placeholder="Type your message here..." className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors resize-none"></textarea>
                 </div>
-                <button disabled={status === 'loading'} type="submit" className="w-full min-h-[56px] text-lg bg-brand-blue hover:bg-blue-900 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                <button disabled={status === 'loading'} type="submit" className="w-full min-h-[56px] text-lg bg-gradient-to-r from-brand-blue to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
                   {status === 'loading' ? <><Loader className="w-5 h-5 animate-spin" /> Sending...</> : 'Send Message'}
                 </button>
               </>
