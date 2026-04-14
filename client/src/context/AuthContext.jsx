@@ -29,10 +29,11 @@ export const AuthProvider = ({ children }) => {
         setToken(response.data.token);
         return { success: true };
       }
+      return { success: false, message: 'Invalid server response. Check VITE_API_URL' };
     } catch (error) {
       return { 
         success: false, 
-        message: String(error?.response?.data?.error || error?.response?.data?.message || 'Login failed')
+        message: String(error?.response?.data?.error || error?.response?.data?.message || error.message || 'Login failed')
       };
     }
   };
