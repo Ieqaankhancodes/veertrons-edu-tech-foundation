@@ -1,20 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const MathUtils = process.env.JWT_SECRET || 'super_secret_fallback_key_for_dev_only_please_change';
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key_for_dev_only_please_change';
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-// VITE_API_URL / CLIENT_ORIGIN should be set in Railway to your frontend URL.
-// e.g.  CLIENT_ORIGIN=https://your-frontend.up.railway.app
-//       or a comma-separated list for multiple origins
 const defaultAllowedOrigins = [
   'http://localhost:5173',
 ];
@@ -27,71 +23,68 @@ const allowedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_ORIGIN || 
 app.use(
   cors({
     origin(origin, cb) {
-      if (!origin) return cb(null, true); // allow curl/Postman (no browser origin)
+      if (!origin) return cb(null, true); 
       if (allowedOrigins.includes('*')) return cb(null, true);
       if (allowedOrigins.includes(origin)) return cb(null, true);
-      // Allow any Railway preview domain
-      if (origin.endsWith('.up.railway.app')) return cb(null, true);
+      if (origin.endsWith('.up.railway.app') || origin.endsWith('.vercel.app')) return cb(null, true);
       return cb(new Error(`CORS blocked for origin: ${origin}`));
     },
   })
 );
 app.use(express.json());
 
-// ─── Database Setup ──────────────────────────────────────────────────────────
-const dbDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+// ─── Database Setup (MongoDB) ────────────────────────────────────────────────
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/veertrons';
 
-const db = new Database(path.join(dbDir, 'veertrons.db'));
-db.pragma('journal_mode = WAL');
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ─── Create Tables ────────────────────────────────────────────────────────────
-db.exec(`
-  CREATE TABLE IF NOT EXISTS donations (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    first_name  TEXT    NOT NULL,
-    last_name   TEXT    NOT NULL,
-    email       TEXT    NOT NULL,
-    amount      REAL    NOT NULL,
-    type        TEXT    NOT NULL DEFAULT 'one-time',
-    status      TEXT    NOT NULL DEFAULT 'pending',
-    message     TEXT,
-    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+// ─── Mongoose Schemas & Models ────────────────────────────────────────────────
+const adminSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password_hash: { type: String, required: true },
+  created_at: { type: Date, default: Date.now }
+});
+const Admin = mongoose.model('Admin', adminSchema);
 
-  CREATE TABLE IF NOT EXISTS contacts (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT    NOT NULL,
-    email      TEXT    NOT NULL,
-    subject    TEXT,
-    message    TEXT    NOT NULL,
-    status     TEXT    NOT NULL DEFAULT 'unread',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+const donationSchema = new mongoose.Schema({
+  first_name: { type: String, required: true },
+  last_name: { type: String, required: true },
+  email: { type: String, required: true },
+  amount: { type: Number, required: true },
+  type: { type: String, default: 'one-time' },
+  status: { type: String, default: 'pending' },
+  message: { type: String },
+  created_at: { type: Date, default: Date.now }
+});
+const Donation = mongoose.model('Donation', donationSchema);
 
-  CREATE TABLE IF NOT EXISTS subscribers (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    email      TEXT    UNIQUE NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+const contactSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  subject: { type: String },
+  message: { type: String, required: true },
+  status: { type: String, default: 'unread' },
+  created_at: { type: Date, default: Date.now }
+});
+const Contact = mongoose.model('Contact', contactSchema);
 
-  CREATE TABLE IF NOT EXISTS admins (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    username      TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
+const subscriberSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  created_at: { type: Date, default: Date.now }
+});
+const Subscriber = mongoose.model('Subscriber', subscriberSchema);
 
 // Seed default admin if none exists
-const adminCheck = db.prepare('SELECT COUNT(*) as count FROM admins').get();
-if (adminCheck.count === 0) {
-  const hash = bcrypt.hashSync('Admin@123', 10);
-  db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run('admin', hash);
-  console.log('⚠️  Default admin created. Username: admin | Password: Admin@123');
-}
-
-console.log('✅ SQLite database initialized at: server/data/veertrons.db');
+Admin.countDocuments().then(count => {
+  if (count === 0) {
+    const hash = bcrypt.hashSync('Admin@123', 10);
+    Admin.create({ username: 'admin', password_hash: hash }).then(() => {
+      console.log('⚠️  Default admin created. Username: admin | Password: Admin@123');
+    });
+  }
+});
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 const authenticateAdmin = (req, res, next) => {
@@ -110,19 +103,19 @@ const authenticateAdmin = (req, res, next) => {
 };
 
 // ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
   try {
-    const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username);
+    const admin = await Admin.findOne({ username });
     if (!admin) return res.status(401).json({ error: 'Invalid credentials' });
 
     const isValid = bcrypt.compareSync(password, admin.password_hash);
     if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '12h' });
+    const token = jwt.sign({ id: admin._id, username: admin.username }, JWT_SECRET, { expiresIn: '12h' });
     res.json({ success: true, token });
   } catch (err) {
     console.error('Login error:', err);
@@ -131,7 +124,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // ─── DONATIONS ────────────────────────────────────────────────────────────────
-app.post('/api/donations', (req, res) => {
+app.post('/api/donations', async (req, res) => {
   const { first_name, last_name, email, amount, type, message } = req.body;
 
   if (!first_name || !last_name || !email || !amount) {
@@ -144,15 +137,13 @@ app.post('/api/donations', (req, res) => {
   }
 
   try {
-    const stmt = db.prepare(`
-      INSERT INTO donations (first_name, last_name, email, amount, type, message)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    const info = stmt.run(first_name, last_name, email, parsedAmount, type || 'one-time', message || null);
+    const newDonation = await Donation.create({
+      first_name, last_name, email, amount: parsedAmount, type: type || 'one-time', message: message || null
+    });
     res.status(201).json({
       success: true,
       message: 'Donation recorded successfully! Thank you for your generosity.',
-      id: info.lastInsertRowid,
+      id: newDonation._id,
     });
   } catch (err) {
     console.error('Donation insert error:', err);
@@ -160,9 +151,10 @@ app.post('/api/donations', (req, res) => {
   }
 });
 
-app.get('/api/donations', authenticateAdmin, (req, res) => {
+app.get('/api/donations', authenticateAdmin, async (req, res) => {
   try {
-    const rows = db.prepare('SELECT * FROM donations ORDER BY created_at DESC').all();
+    // Return lean objects to match old SQLite row shapes 
+    const rows = await Donation.find().sort({ created_at: -1 }).lean();
     res.json({ success: true, count: rows.length, data: rows });
   } catch (err) {
     console.error(err);
@@ -171,7 +163,7 @@ app.get('/api/donations', authenticateAdmin, (req, res) => {
 });
 
 // ─── CONTACTS ─────────────────────────────────────────────────────────────────
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', async (req, res) => {
   const { name, email, subject, message } = req.body;
 
   if (!name || !email || !message) {
@@ -179,15 +171,13 @@ app.post('/api/contact', (req, res) => {
   }
 
   try {
-    const stmt = db.prepare(`
-      INSERT INTO contacts (name, email, subject, message)
-      VALUES (?, ?, ?, ?)
-    `);
-    const info = stmt.run(name, email, subject || null, message);
+    const newContact = await Contact.create({
+      name, email, subject: subject || null, message
+    });
     res.status(201).json({
       success: true,
       message: 'Your message has been received! We will get back to you soon.',
-      id: info.lastInsertRowid,
+      id: newContact._id,
     });
   } catch (err) {
     console.error('Contact insert error:', err);
@@ -195,9 +185,9 @@ app.post('/api/contact', (req, res) => {
   }
 });
 
-app.get('/api/contact', authenticateAdmin, (req, res) => {
+app.get('/api/contact', authenticateAdmin, async (req, res) => {
   try {
-    const rows = db.prepare('SELECT * FROM contacts ORDER BY created_at DESC').all();
+    const rows = await Contact.find().sort({ created_at: -1 }).lean();
     res.json({ success: true, count: rows.length, data: rows });
   } catch (err) {
     console.error(err);
@@ -206,16 +196,16 @@ app.get('/api/contact', authenticateAdmin, (req, res) => {
 });
 
 // ─── NEWSLETTER ───────────────────────────────────────────────────────────────
-app.post('/api/subscribe', (req, res) => {
+app.post('/api/subscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
 
   try {
-    const stmt = db.prepare('INSERT OR IGNORE INTO subscribers (email) VALUES (?)');
-    const info = stmt.run(email);
-    if (info.changes === 0) {
+    const existing = await Subscriber.findOne({ email });
+    if (existing) {
       return res.json({ success: true, message: 'You are already subscribed!' });
     }
+    await Subscriber.create({ email });
     res.status(201).json({ success: true, message: 'Successfully subscribed to our newsletter!' });
   } catch (err) {
     console.error(err);
@@ -224,20 +214,24 @@ app.post('/api/subscribe', (req, res) => {
 });
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  const donationCount = db.prepare('SELECT COUNT(*) as count FROM donations').get();
-  const contactCount  = db.prepare('SELECT COUNT(*) as count FROM contacts').get();
-  const subCount      = db.prepare('SELECT COUNT(*) as count FROM subscribers').get();
+app.get('/api/health', async (req, res) => {
+  try {
+    const donationCount = await Donation.countDocuments();
+    const contactCount  = await Contact.countDocuments();
+    const subCount      = await Subscriber.countDocuments();
 
-  res.json({
-    status: 'ok',
-    database: 'SQLite (local, persistent via Railway volume)',
-    stats: {
-      donations: donationCount.count,
-      contacts:  contactCount.count,
-      subscribers: subCount.count,
-    },
-  });
+    res.json({
+      status: 'ok',
+      database: 'MongoDB',
+      stats: {
+        donations: donationCount,
+        contacts: contactCount,
+        subscribers: subCount,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ status: 'error', error: 'Database unavailable' });
+  }
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
