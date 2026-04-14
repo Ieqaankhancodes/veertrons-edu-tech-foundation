@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // All /api/* requests are forwarded to the local Express server
+      // DEV ONLY: forwards /api/* to your local Express server on port 5000
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
