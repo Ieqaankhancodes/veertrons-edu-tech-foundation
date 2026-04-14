@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
 const PROGRAMS = [
   {
@@ -308,7 +309,7 @@ function Contact() {
     setErrorMsg('');
 
     try {
-      await axios.post('/api/contact', {
+      await axios.post(`${API_BASE}/api/contact`, {
         name: form.name,
         email: form.email,
         subject: form.subject,
@@ -319,7 +320,19 @@ function Contact() {
       setTimeout(() => setStatus('idle'), 5000);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.response?.data?.error || 'Failed to send message. Please try again.');
+      let errMsg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to send message. Please try again.';
+
+      if (err?.response?.status === 404 && String(err?.config?.url || '').startsWith('/api/')) {
+        errMsg =
+          'Contact API not found (404). If you deployed only the frontend, deploy the backend and set `VITE_API_URL` (or `VITE_API_BASE_URL`) to your backend URL.';
+      }
+
+      if (typeof errMsg !== 'string') errMsg = String(errMsg);
+      setErrorMsg(errMsg);
       setStatus('error');
     }
   };
@@ -405,7 +418,7 @@ function Contact() {
                       className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6 text-sm"
                     >
                       <AlertCircle className="w-4 h-4 shrink-0" />
-                      {errorMsg}
+                      {String(errorMsg)}
                     </motion.div>
                   )}
                 </AnimatePresence>

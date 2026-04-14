@@ -12,7 +12,26 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key_for_dev_only_please_change';
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
-app.use(cors({ origin: 'http://localhost:5173' }));
+const defaultAllowedOrigins = [
+  'http://localhost:5173',
+  'https://veertrons-edu-tech-foundation.vercel.app',
+];
+
+const allowedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_ORIGIN || defaultAllowedOrigins.join(','))
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, cb) {
+      if (!origin) return cb(null, true); // allow non-browser tools (curl/Postman)
+      if (allowedOrigins.includes('*')) return cb(null, true);
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error(`CORS blocked for origin: ${origin}`));
+    },
+  })
+);
 app.use(express.json());
 
 // ─── Database Setup ──────────────────────────────────────────────────────────

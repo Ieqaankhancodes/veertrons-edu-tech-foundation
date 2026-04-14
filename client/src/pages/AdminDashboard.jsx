@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 import { LogOut, Heart, MessageSquare, Loader, User, DollarSign, Mail, MapPin } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -24,8 +25,8 @@ export default function AdminDashboard() {
       setError(null);
       try {
         const [donationsRes, messagesRes] = await Promise.all([
-          axios.get('/api/donations'),
-          axios.get('/api/contact')
+          axios.get(`${API_BASE}/api/donations`),
+          axios.get(`${API_BASE}/api/contact`)
         ]);
         setData({
           donations: donationsRes.data.data,

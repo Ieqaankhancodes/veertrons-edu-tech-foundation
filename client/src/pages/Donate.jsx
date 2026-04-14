@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, CreditCard, ShieldCheck, ArrowRight, CheckCircle, Loader, AlertCircle } from 'lucide-react';
 import axios from 'axios';
+import API_BASE from '../utils/api';
 
 export default function Donate() {
   const [amount, setAmount] = useState(50);
@@ -41,7 +42,7 @@ export default function Donate() {
     }
 
     try {
-      const { data } = await axios.post('/api/donations', {
+      await axios.post(`${API_BASE}/api/donations`, {
         first_name: form.first_name,
         last_name: form.last_name,
         email: form.email,
@@ -53,7 +54,19 @@ export default function Donate() {
       setStatus('success');
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.response?.data?.error || err.message || 'Failed to process donation. Is the server running?');
+      let errMsg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to process donation. Is the server running?';
+
+      if (err?.response?.status === 404 && String(err?.config?.url || '').startsWith('/api/')) {
+        errMsg =
+          'Donation API not found (404). If you deployed only the frontend, deploy the backend and set `VITE_API_URL` (or `VITE_API_BASE_URL`) to your backend URL.';
+      }
+
+      if (typeof errMsg !== 'string') errMsg = String(errMsg);
+      setErrorMsg(errMsg);
       setStatus('error');
     }
   };
@@ -261,7 +274,7 @@ export default function Donate() {
                   className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-sm"
                 >
                   <AlertCircle className="w-4 h-4 shrink-0" />
-                  {errorMsg}
+                  {String(errorMsg)}
                 </motion.div>
               )}
             </AnimatePresence>
