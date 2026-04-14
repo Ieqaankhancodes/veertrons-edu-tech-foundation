@@ -28,6 +28,8 @@ app.use(
       if (!origin) return cb(null, true); // allow non-browser tools (curl/Postman)
       if (allowedOrigins.includes('*')) return cb(null, true);
       if (allowedOrigins.includes(origin)) return cb(null, true);
+      // Allow any Vercel preview domain
+      if (origin.endsWith('.vercel.app')) return cb(null, true);
       return cb(new Error(`CORS blocked for origin: ${origin}`));
     },
   })
