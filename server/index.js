@@ -11,10 +11,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key_for_dev_only_please_change';
 
-// ─── Middleware ──────────────────────────────────────────────────────────────
+// ─── CORS ────────────────────────────────────────────────────────────────────
+// VITE_API_URL / CLIENT_ORIGIN should be set in Railway to your frontend URL.
+// e.g.  CLIENT_ORIGIN=https://your-frontend.up.railway.app
+//       or a comma-separated list for multiple origins
 const defaultAllowedOrigins = [
   'http://localhost:5173',
-  'https://veertrons-edu-tech-foundation.vercel.app',
 ];
 
 const allowedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_ORIGIN || defaultAllowedOrigins.join(','))
@@ -25,11 +27,11 @@ const allowedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_ORIGIN || 
 app.use(
   cors({
     origin(origin, cb) {
-      if (!origin) return cb(null, true); // allow non-browser tools (curl/Postman)
+      if (!origin) return cb(null, true); // allow curl/Postman (no browser origin)
       if (allowedOrigins.includes('*')) return cb(null, true);
       if (allowedOrigins.includes(origin)) return cb(null, true);
-      // Allow any Vercel preview domain
-      if (origin.endsWith('.vercel.app')) return cb(null, true);
+      // Allow any Railway preview domain
+      if (origin.endsWith('.up.railway.app')) return cb(null, true);
       return cb(new Error(`CORS blocked for origin: ${origin}`));
     },
   })
@@ -37,13 +39,10 @@ app.use(
 app.use(express.json());
 
 // ─── Database Setup ──────────────────────────────────────────────────────────
-// Creates a free local SQLite file — no cloud, no payment needed!
 const dbDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 const db = new Database(path.join(dbDir, 'veertrons.db'));
-
-// Enable WAL mode for better performance
 db.pragma('journal_mode = WAL');
 
 // ─── Create Tables ────────────────────────────────────────────────────────────
@@ -94,7 +93,7 @@ if (adminCheck.count === 0) {
 
 console.log('✅ SQLite database initialized at: server/data/veertrons.db');
 
-// ─── Authentication Middleware ────────────────────────────────────────────────
+// ─── Auth Middleware ──────────────────────────────────────────────────────────
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -110,13 +109,12 @@ const authenticateAdmin = (req, res, next) => {
   }
 };
 
-// ─── ADMIN AUTH ROUTES ───────────────────────────────────────────────────────
+// ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password required' });
   }
-
   try {
     const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username);
     if (!admin) return res.status(401).json({ error: 'Invalid credentials' });
@@ -132,9 +130,7 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// ─── DONATION ROUTES ─────────────────────────────────────────────────────────
-
-// POST /api/donations — Save a new donation
+// ─── DONATIONS ────────────────────────────────────────────────────────────────
 app.post('/api/donations', (req, res) => {
   const { first_name, last_name, email, amount, type, message } = req.body;
 
@@ -153,7 +149,6 @@ app.post('/api/donations', (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?)
     `);
     const info = stmt.run(first_name, last_name, email, parsedAmount, type || 'one-time', message || null);
-
     res.status(201).json({
       success: true,
       message: 'Donation recorded successfully! Thank you for your generosity.',
@@ -165,7 +160,6 @@ app.post('/api/donations', (req, res) => {
   }
 });
 
-// GET /api/donations — List all donations (admin use)
 app.get('/api/donations', authenticateAdmin, (req, res) => {
   try {
     const rows = db.prepare('SELECT * FROM donations ORDER BY created_at DESC').all();
@@ -176,9 +170,7 @@ app.get('/api/donations', authenticateAdmin, (req, res) => {
   }
 });
 
-// ─── CONTACT ROUTES ───────────────────────────────────────────────────────────
-
-// POST /api/contact — Save a contact form submission
+// ─── CONTACTS ─────────────────────────────────────────────────────────────────
 app.post('/api/contact', (req, res) => {
   const { name, email, subject, message } = req.body;
 
@@ -192,7 +184,6 @@ app.post('/api/contact', (req, res) => {
       VALUES (?, ?, ?, ?)
     `);
     const info = stmt.run(name, email, subject || null, message);
-
     res.status(201).json({
       success: true,
       message: 'Your message has been received! We will get back to you soon.',
@@ -204,7 +195,6 @@ app.post('/api/contact', (req, res) => {
   }
 });
 
-// GET /api/contact — List all messages (admin use)
 app.get('/api/contact', authenticateAdmin, (req, res) => {
   try {
     const rows = db.prepare('SELECT * FROM contacts ORDER BY created_at DESC').all();
@@ -215,9 +205,7 @@ app.get('/api/contact', authenticateAdmin, (req, res) => {
   }
 });
 
-// ─── NEWSLETTER SUBSCRIBE ─────────────────────────────────────────────────────
-
-// POST /api/subscribe
+// ─── NEWSLETTER ───────────────────────────────────────────────────────────────
 app.post('/api/subscribe', (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -225,7 +213,6 @@ app.post('/api/subscribe', (req, res) => {
   try {
     const stmt = db.prepare('INSERT OR IGNORE INTO subscribers (email) VALUES (?)');
     const info = stmt.run(email);
-
     if (info.changes === 0) {
       return res.json({ success: true, message: 'You are already subscribed!' });
     }
@@ -239,15 +226,15 @@ app.post('/api/subscribe', (req, res) => {
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   const donationCount = db.prepare('SELECT COUNT(*) as count FROM donations').get();
-  const contactCount = db.prepare('SELECT COUNT(*) as count FROM contacts').get();
-  const subCount = db.prepare('SELECT COUNT(*) as count FROM subscribers').get();
+  const contactCount  = db.prepare('SELECT COUNT(*) as count FROM contacts').get();
+  const subCount      = db.prepare('SELECT COUNT(*) as count FROM subscribers').get();
 
   res.json({
     status: 'ok',
-    database: 'SQLite (local, free)',
+    database: 'SQLite (local, persistent via Railway volume)',
     stats: {
       donations: donationCount.count,
-      contacts: contactCount.count,
+      contacts:  contactCount.count,
       subscribers: subCount.count,
     },
   });
@@ -258,17 +245,5 @@ app.listen(PORT, () => {
   console.log(`\n🚀 Veertrons backend running at: http://localhost:${PORT}`);
   console.log(`📊 Health check:  http://localhost:${PORT}/api/health`);
   console.log(`💰 Donations API: http://localhost:${PORT}/api/donations`);
-  console.log(`📧 Contact API:   http://localhost:${PORT}/api/contact`);
-  console.log(`\n💡 Database is 100% FREE — stored locally in server/data/veertrons.db\n`);
-
-  // Prevent server from sleeping (for free tier hosting like Render)
-  if (process.env.RENDER_EXTERNAL_URL) {
-    const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
-    setInterval(() => {
-      fetch(`${process.env.RENDER_EXTERNAL_URL}/api/health`)
-        .then(res => console.log(`[Self-Ping] Status: ${res.status} - Keeping server awake!`))
-        .catch(err => console.error('[Self-Ping] Error:', err.message));
-    }, PING_INTERVAL);
-    console.log(`⏰ Self-ping scheduled every 14 minutes for ${process.env.RENDER_EXTERNAL_URL}`);
-  }
+  console.log(`📧 Contact API:   http://localhost:${PORT}/api/contact\n`);
 });
