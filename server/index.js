@@ -3,6 +3,8 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const https = require('https');
+const http = require('http');
 require('dotenv').config();
 
 const app = express();
@@ -233,6 +235,19 @@ app.get('/api/health', async (req, res) => {
     res.status(500).json({ status: 'error', error: 'Database unavailable' });
   }
 });
+
+// ─── Self-ping to prevent sleep (for Render/Free tiers) ───────────────────────
+const appUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL;
+if (appUrl) {
+  const protocol = appUrl.startsWith('https') ? https : http;
+  setInterval(() => {
+    protocol.get(`${appUrl}/api/health`, (res) => {
+      console.log(`[Self-Ping] Sent request to keep awake: Status ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.error('[Self-Ping] Error:', err.message);
+    });
+  }, 14 * 60 * 1000); // 14 minutes
+}
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
