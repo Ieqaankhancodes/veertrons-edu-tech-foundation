@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import API_BASE from '../utils/api';
-import { LogOut, Heart, MessageSquare, Loader, User, DollarSign, Mail, MapPin } from 'lucide-react';
+import { LogOut, Heart, MessageSquare, Loader, User, IndianRupee, Mail, MapPin } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { logout, isAuthenticated } = useAuth();
@@ -107,11 +107,11 @@ export default function AdminDashboard() {
             <div>
               <p className="text-gray-500 text-sm font-medium mb-1">Total Raised</p>
               <h3 className="text-3xl font-extrabold text-brand-blue">
-                ${data.donations.reduce((sum, d) => sum + d.amount, 0).toFixed(2)}
+                ₹{data.donations.reduce((sum, d) => sum + d.amount, 0).toFixed(2)}
               </h3>
             </div>
             <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-              <DollarSign className="w-6 h-6" />
+              <IndianRupee className="w-6 h-6" />
             </div>
           </motion.div>
         </div>
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
                               <span className="text-sm text-gray-500">{donation.email}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 font-extrabold text-brand-orange">${donation.amount.toFixed(2)}</td>
+                          <td className="px-6 py-4 font-extrabold text-brand-orange">₹{donation.amount.toFixed(2)}</td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${donation.type === 'monthly' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
                                {donation.type}

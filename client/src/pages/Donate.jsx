@@ -8,7 +8,7 @@ export default function Donate() {
   const [amount, setAmount] = useState(50);
   const [customAmount, setCustomAmount] = useState('');
   const [type, setType] = useState('one-time');
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', message: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', message: '' });
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -35,7 +35,7 @@ export default function Donate() {
       setStatus('error');
       return;
     }
-    if (!form.first_name || !form.last_name || !form.email) {
+    if (!form.first_name || !form.last_name || !form.email || !form.phone) {
       setErrorMsg('Please fill in all required fields.');
       setStatus('error');
       return;
@@ -46,6 +46,7 @@ export default function Donate() {
         first_name: form.first_name,
         last_name: form.last_name,
         email: form.email,
+        phone: form.phone,
         amount: finalAmount,
         type,
         message: form.message,
@@ -87,22 +88,39 @@ export default function Donate() {
           <div className="w-20 h-20 bg-green-100/80 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
-          <h2 className="text-3xl font-heading font-extrabold text-brand-blue mb-3">Thank You!</h2>
-          <p className="text-gray-600 mb-2">
-            Your donation of <strong className="text-brand-orange">${getFinalAmount()}</strong> has been recorded.
+          <h2 className="text-3xl font-heading font-extrabold text-brand-blue mb-3">Complete Your Payment</h2>
+          <p className="text-gray-600 mb-6 text-lg">
+            Please complete your donation of <strong className="text-brand-orange">₹{getFinalAmount()}</strong> by scanning the QR code below.
           </p>
-          <p className="text-gray-500 text-sm mb-8">
-            We'll send a confirmation to <strong>{form.email}</strong>. Your generosity creates lasting impact.
-          </p>
+          
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 inline-flex flex-col items-center mb-6">
+            <img src="/qr-code.png" alt="Payment QR Code" className="w-48 h-48 sm:w-56 sm:h-56 object-contain" />
+          </div>
+
+          <div className="bg-blue-50/50 p-4 rounded-xl text-left text-sm text-gray-700 mb-8 border border-blue-100">
+            <h4 className="font-bold text-brand-blue mb-2 flex items-center gap-2"><Heart className="w-4 h-4" /> How to Donate</h4>
+            <ol className="list-decimal pl-5 space-y-1">
+              <li>Open your preferred payment app (GPay, PhonePe, Paytm, etc.).</li>
+              <li>Scan the QR code shown above.</li>
+              <li>Pay the selected amount: <strong>₹{getFinalAmount()}</strong>.</li>
+              <li>Complete the payment securely on your device.</li>
+            </ol>
+            <div className="mt-3 bg-white p-3 rounded-lg border border-orange-100 border-l-4 border-l-brand-orange">
+              <p className="text-gray-600 text-xs sm:text-sm font-medium">
+                You will receive your official donation receipt on your number <strong className="text-brand-orange">{form.phone}</strong> shortly after we verify the payment.
+              </p>
+            </div>
+          </div>
+
           <button
             onClick={() => {
               setStatus('idle');
-              setForm({ first_name: '', last_name: '', email: '', message: '' });
+              setForm({ first_name: '', last_name: '', email: '', phone: '', message: '' });
               setAmount(50);
             }}
-            className="px-6 py-3 bg-gradient-to-r from-brand-blue to-blue-800 text-white rounded-xl font-bold hover:shadow-lg transition-all"
+            className="px-6 py-3 bg-gradient-to-r from-brand-blue to-blue-800 text-white rounded-xl font-bold hover:shadow-lg transition-all w-full"
           >
-            Make Another Donation
+            I have completed the payment
           </button>
         </motion.div>
       </div>
@@ -170,7 +188,7 @@ export default function Donate() {
                   onClick={() => setAmount(amt)}
                   className={`py-3 rounded-xl border-2 font-bold text-sm sm:text-base transition-all ${amount === amt ? 'border-brand-orange bg-orange-50 text-brand-orange' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
                 >
-                  ${amt}
+                  ₹{amt}
                 </button>
               ))}
               <button
@@ -191,7 +209,7 @@ export default function Donate() {
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-6 relative overflow-hidden"
                 >
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
                   <input
                     type="number"
                     min="1"
@@ -227,15 +245,26 @@ export default function Donate() {
                   className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors"
                 />
               </div>
-              <input
-                name="email"
-                type="email"
-                placeholder="Email Address *"
-                value={form.email}
-                onChange={handleChange}
-                required
-                className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors"
-              />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="Email Address *"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors"
+                />
+                <input
+                  name="phone"
+                  type="tel"
+                  placeholder="Phone Number *"
+                  value={form.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-gray-50 border border-gray-200 px-4 min-h-[52px] rounded-xl focus:outline-none focus:border-brand-lightBlue focus:bg-white transition-colors"
+                />
+              </div>
               <textarea
                 name="message"
                 placeholder="Leave a message (optional)"
@@ -272,7 +301,7 @@ export default function Donate() {
                 </>
               ) : (
                 <>
-                  Donate {amount !== 'custom' ? `$${amount}` : customAmount ? `$${customAmount}` : ''} <ArrowRight className="w-5 h-5" />
+                  Donate {amount !== 'custom' ? `₹${amount}` : customAmount ? `₹${customAmount}` : ''} <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
