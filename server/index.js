@@ -54,6 +54,7 @@ const donationSchema = new mongoose.Schema({
   first_name: { type: String, required: true },
   last_name: { type: String, required: true },
   email: { type: String, required: true },
+  phone: { type: String, required: true },
   amount: { type: Number, required: true },
   type: { type: String, default: 'one-time' },
   status: { type: String, default: 'pending' },
@@ -127,10 +128,10 @@ app.post('/api/admin/login', async (req, res) => {
 
 // ─── DONATIONS ────────────────────────────────────────────────────────────────
 app.post('/api/donations', async (req, res) => {
-  const { first_name, last_name, email, amount, type, message } = req.body;
+  const { first_name, last_name, email, phone, amount, type, message } = req.body;
 
-  if (!first_name || !last_name || !email || !amount) {
-    return res.status(400).json({ error: 'Missing required fields: first_name, last_name, email, amount' });
+  if (!first_name || !last_name || !email || !phone || !amount) {
+    return res.status(400).json({ error: 'Missing required fields: first_name, last_name, email, phone, amount' });
   }
 
   const parsedAmount = parseFloat(amount);
@@ -140,7 +141,7 @@ app.post('/api/donations', async (req, res) => {
 
   try {
     const newDonation = await Donation.create({
-      first_name, last_name, email, amount: parsedAmount, type: type || 'one-time', message: message || null
+      first_name, last_name, email, phone, amount: parsedAmount, type: type || 'one-time', message: message || null
     });
     res.status(201).json({
       success: true,
